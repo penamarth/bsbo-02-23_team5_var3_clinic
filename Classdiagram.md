@@ -6,10 +6,12 @@ class UI {
     +displayLoginScreen()
     +displayPersonalAccount()
     +handleButtonClick()
+    +update(message: String)
 }
 
 class HospitalController {
     -database: IDatabase
+    -observers: List<IObserver>
     +authenticateUser()
     +registerPatient()
     +createMedicalRecord()
@@ -25,6 +27,9 @@ class HospitalController {
     +createDoctorAccount()
     +assignSpecialization()
     +setupWorkSchedule()
+    +addObserver(observer: IObserver)
+    +removeObserver(observer: IObserver)
+    +notifyObservers(message: String)
 }
 
 class ExternalAuthentication {
@@ -43,6 +48,7 @@ class Patient {
     -passport: String
     +enterMedicalData()
     +scheduleAppointment()
+    +update(message: String)
 }
 
 class Doctor {
@@ -51,6 +57,7 @@ class Doctor {
     -specialization: String
     +conductAppointment()
     +updateSchedule()
+    +update(message: String)
 }
 
 class Visit {
@@ -122,6 +129,16 @@ class SQLiteDatabase implements IDatabase {
     +compact()
 }
 
+interface IObserver {
+    +update(message: String)
+}
+
+interface IObservable {
+    +addObserver(observer: IObserver)
+    +removeObserver(observer: IObserver)
+    +notifyObservers(message: String)
+}
+
 UI --> HospitalController
 
 HospitalController --> ExternalAuthentication
@@ -131,14 +148,15 @@ HospitalController --> Patient
 HospitalController --> Doctor
 HospitalController --> Visit
 
-MedicalRecords o-- Patient 
-MedicalRecords o-- Visit 
+MedicalRecords o-- Patient : patients
+MedicalRecords o-- Visit : visits
 
+HospitalController ..|> IObservable
+UI ..|> IObserver
+Patient ..|> IObserver
+Doctor ..|> IObserver
 
 Schedule --> IDatabase
-Schedule --> Doctor
-Schedule --> Patient
-
 HospitalController --> IDatabase
 ExternalAuthentication --> IDatabase
 MedicalRecords --> IDatabase
