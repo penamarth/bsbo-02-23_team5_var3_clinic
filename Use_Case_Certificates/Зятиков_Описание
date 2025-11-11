@@ -1,0 +1,38 @@
+Use Case: Выдача справок и направлений врачом.
+Основные сценарии:
+Выдача справок:
+1.	В UI приема врач заносит данные, полученные от пациента (UI.handleButtonClick() вызывает HospitalController.updateMedicalData(), который обновляет данные в MedicalRecords.updateData()).
+2.	Затем врач нажимает на кнопку «выдача справки» (UI.handleButtonClick() вызывает HospitalController.requestCertificate()).
+3.	В открытом окне появляется поле для выбора стандарта справки (0.86/у, 0.82/п, …) — UI отображает опции на основе данных из MedicalRecords.getHistory().
+4.	После выбора стандарта врач нажимает на кнопку «данные», после чего его перекидывает на страницу с данными пациента для необходимой справки (HospitalController извлекает данные из MedicalRecords.getPatientVisits(patientId) и Visit.getVisitById(visitId)).
+5.	После заполнения и проверки данных, врач нажимает на кнопку «выдать справку» (UI.handleButtonClick() вызывает HospitalController.requestCertificate() с заполненными данными).
+6.	Приложение отправляет запрос с имеющимися данными на выдачу справки:
+- o	HospitalController обрабатывает запрос, начинает транзакцию (IDatabase.beginTransaction()).
+- o	Создается или обновляется запись в MedicalRecords (MedicalRecords.addVisit() или updateData()).
+- o	HospitalController.notifyObservers() уведомляет Patient и UI о выдаче (Patient.update(message), UI.update(message)).
+- o	Транзакция коммитится (IDatabase.commit()). Если ошибка, rollback (IDatabase.rollback()).
+7.	Затем справка появляется в карте пациента, где пациент может ее просмотреть (MedicalRecords.linkToPatient(), Patient.enterMedicalData() для просмотра через личный кабинет).
+Выдача направлений:
+1.	В UI приема врач заносит данные, полученные от пациента (аналогично шагу 1 выдачи справок: HospitalController.updateMedicalData()).
+2.	Затем врач нажимает на кнопку «выдача направлений» (UI.handleButtonClick() вызывает HospitalController.generateReferral()).
+3.	В открытом окне появится поле для ввода специализации врача (UI отображает опции на основе Doctor.specialization из базы данных через Schedule.selectDoctor()).
+4.	После выбора специальности появится окно для уточнения причины выдачи (UI.handleButtonClick() обновляет Visit.addDiagnosis() или Visit.symptoms).
+5.	Затем врач должен нажать на кнопку «выдать направление» (UI.handleButtonClick() вызывает HospitalController.generateReferral() с данными).
+6.	Приложение отправляет запрос с имеющимися данными на выдачу направления:
+- o	HospitalController проверяет доступность врача (Schedule.checkAvailability(), Schedule.getFreeSlots()).
+- o	Создается новая запись в Visit (Visit.completeVisit() с visitType = "referral").
+- o	HospitalController.notifyObservers() уведомляет Patient, Doctor и UI (Doctor.update(message) для обновления расписания, Patient.update(message)).
+- o	Данные сохраняются в MedicalRecords.addVisit(visit) и IDatabase.executeQuery().
+7.	Направление появляется в медкарте пациента (MedicalRecords.getHistory(), доступно через Patient.showHistory() или HospitalController.showHistory()).
+Постусловия:
+- В медкарте пациента доступна выписанная справка для просмотра и скачивания (MedicalRecords.getHistory(), Patient.update(message: "Справка выдана")).
+- В медкарте пациента доступно направление к врачу нужной специальности (Schedule.confirmAppointment(), Doctor.updateSchedule()).
+- Пациент имеет доступ к личному кабинету (HospitalController.authenticateUser() для Patient).
+- Больница имеет хотя бы одного врача нужной специальности (проверено через Schedule.selectDoctor()).
+- Все изменения сохранены в базе данных (IDatabase.commit()), и наблюдатели уведомлены (IObservable.notifyObservers()).
+- Если произошла ошибка (например, отсутствие свободных слотов), транзакция откатывается (IDatabase.rollback()), и UI.update() отображает сообщение об ошибке.
+Альтернативные сценарии:
+- Если данные пациента некорректны: HospitalController.validateDoctorCredentials() или проверка в MedicalRecords возвращает ошибку, UI.update("Ошибка в данных").
+- Если врач не авторизован: Перенаправление на ExternalAuthentication.authorizeViaGosuslugi() или аналог.
+- Отмена операции: UI.handleButtonClick("cancel") вызывает HospitalController.notifyObservers("Операция отменена"), без изменений в базе.
+
