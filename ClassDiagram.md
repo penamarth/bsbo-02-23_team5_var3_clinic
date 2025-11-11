@@ -32,11 +32,30 @@ class HospitalController {
     +notifyObservers(message: String)
 }
 
-class ExternalAuthentication {
+interface IExternalAuthentication {
     -database: IDatabase
     +authorizeViaGosuslugi()
     +authorizeViaMAX()
     +authorizeViaVKID()
+    +getUserData()
+    
+}
+class Gosuslugi {
+    -id: String
+    -fullName: String
+    +registrate()
+    +getUserData()
+}
+class Max {
+    -id: String
+    -fullName: String
+    +registrate()
+    +getUserData()
+}
+class VKId {
+    -id: String
+    -fullName: String
+    +registrate()
     +getUserData()
 }
 
@@ -141,24 +160,28 @@ interface IObservable {
 
 UI --> HospitalController
 
-HospitalController --> ExternalAuthentication
+HospitalController --> IExternalAuthentication
 HospitalController --> MedicalRecords
 HospitalController --> Schedule
 HospitalController --> Patient
 HospitalController --> Doctor
 HospitalController --> Visit
 
-MedicalRecords o-- Patient : patients
-MedicalRecords o-- Visit : visits
+MedicalRecords o-- Patient 
+MedicalRecords o-- Visit 
 
 HospitalController ..|> IObservable
 UI ..|> IObserver
 Patient ..|> IObserver
 Doctor ..|> IObserver
 
+IExternalAuthentication --> Gosuslugi
+IExternalAuthentication --> Max
+IExternalAuthentication --> VKId
+
 Schedule --> IDatabase
 HospitalController --> IDatabase
-ExternalAuthentication --> IDatabase
+IExternalAuthentication --> IDatabase
 MedicalRecords --> IDatabase
 
 @enduml
