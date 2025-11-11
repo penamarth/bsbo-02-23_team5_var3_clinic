@@ -171,7 +171,6 @@ MedicalRecords o-- Patient
 MedicalRecords o-- Visit 
 
 HospitalController ..|> IObservable
-UI ..|> IObserver
 Patient ..|> IObserver
 Doctor ..|> IObserver
 
