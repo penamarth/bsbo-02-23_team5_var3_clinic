@@ -4,77 +4,76 @@ title Регистрация пациента и создание медицин
 actor "Пациент" as Patient
 participant "UI" as UI
 participant "HospitalController" as HC
-participant "ExternalAuthentication" as EA
+participant "IExternalAuthentication" as IEA
+participant "Gosuslugi" as GS
 participant "MedicalRecords" as MR
 participant "Patient" as P
-participant "IDatabase" as DB
+participant "IMedicalRecordRepository" as IMRRepo
 
+|||
 activate Patient
-Patient -> UI: Запускает приложение
+Patient -> UI: 1. Запускает приложение
 activate UI
-UI --> Patient: Отображает начальный экран
+UI --> Patient: 2. Показывает начальный экран\n(кнопки Войти/Зарегистрироваться)
 
-Patient -> UI: Нажимает "Зарегистрироваться"
-UI -> HC: registerPatient()
+Patient -> UI: 3. Нажимает "Зарегистрироваться"
+UI -> HC: 4. showRegistrationOptions()
 activate HC
+HC --> UI: Способы регистрации
+UI --> Patient: 4. Предлагает выбрать способ\n(Госуслуги, MAX, ВК, Обычная)
 
-HC -> EA: authorizeViaGosuslugi()
-activate EA
-EA --> HC: Перенаправление на Госуслуги
-HC --> UI: Перенаправление
-UI --> Patient: Переход к Госуслугам
+Patient -> UI: 5. Выбирает "Госуслуги"
+UI -> HC: registerViaGosuslugi()
+HC -> HC: beginTransaction()
+HC -> IEA: authorizeViaGosuslugi()
+activate IEA
+IEA -> GS: redirectToAuth()
+activate GS
+GS --> IEA: Перенаправление
+IEA --> HC: Требуется аутентификация
+HC --> UI: Перенаправление на сервис
+UI --> Patient: 8. Переход к Госуслугам
 
-Patient -> EA: Проходит аутентификацию
-activate EA
-EA -> EA: Ввод логина/пароля
-EA --> Patient: Подтверждение прав
-EA -> EA: getUserData()
-EA --> HC: Токен + данные пользователя
-deactivate EA
+Patient -> GS: 9. Проходит аутентификацию
+GS -> GS: Ввод логина/пароля
+GS --> Patient: Подтверждение прав
+GS -> IEA: getUserData()
+IEA --> HC: 10. Токен + данные пользователя
+deactivate GS
+deactivate IEA
 
-HC -> P: new Patient(данные)
+HC -> MR: 13. createMedicalRecord()
+activate MR
+MR -> MR: 13. createRecord()
+MR -> IMRRepo: save(medicalRecord)
+activate IMRRepo
+IMRRepo --> MR: Подтверждение
+deactivate IMRRepo
+MR --> HC: 16. Медицинская карта создана
+deactivate MR
+
+HC -> P: 12. new Patient(данные)
 activate P
 P --> HC: Объект пациента
+HC -> P: attach() \n// Patient как IObserver
+P --> HC: Подтверждение
 deactivate P
 
-HC -> MR: createMedicalRecord()
+HC -> MR: 14. linkPatientToMedicalRecord(patient)
 activate MR
-MR -> MR: createRecord()
-MR -> MR: linkToPatient(patient)
-MR -> DB: executeQuery(INSERT)
-activate DB
-DB --> MR: ID записи
-deactivate DB
-MR --> HC: Медицинская карта создана
+MR -> IMRRepo: updateMedicalRecordWithPatient()
+activate IMRRepo
+IMRRepo --> MR: Подтверждение
+deactivate IMRRepo
+MR --> HC: 16. Пациент привязан к карте
 deactivate MR
 
-HC -> DB: commit()
-activate DB
-DB --> HC: Транзакция подтверждена
-deactivate DB
-
-HC --> UI: Успешная регистрация
+HC -> HC: notifyObservers()\n// Patient уведомлен
+HC --> UI: 17. Успешная регистрация
 deactivate HC
 
-UI --> Patient: Перенаправление в личный кабинет
-UI --> Patient: Запрос медицинских данных
+UI --> Patient: 18. Уведомление о завершении\n19. Перенаправление в ЛК\n20. Запрос мед. данных
 
-Patient -> UI: Вводит медицинские данные
-UI -> HC: updateMedicalData(данные)
-activate HC
-HC -> MR: updateData()
-activate MR
-MR -> DB: executeQuery(UPDATE)
-activate DB
-DB --> MR: Данные обновлены
-deactivate DB
-MR --> HC: Медицинские данные сохранены
-deactivate MR
-HC --> UI: Данные обновлены
-deactivate HC
-
-UI --> Patient: Уведомление об успехе
 deactivate UI
 deactivate Patient
-
 @enduml
