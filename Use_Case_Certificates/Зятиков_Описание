@@ -1,38 +1,67 @@
-Use Case: Выдача справок и направлений врачом.
-Основные сценарии:
-Выдача справок:
-1.	В UI приема врач заносит данные, полученные от пациента (UI.handleButtonClick() вызывает HospitalController.updateMedicalData(), который обновляет данные в MedicalRecords.updateData()).
-2.	Затем врач нажимает на кнопку «выдача справки» (UI.handleButtonClick() вызывает HospitalController.requestCertificate()).
-3.	В открытом окне появляется поле для выбора стандарта справки (0.86/у, 0.82/п, …) — UI отображает опции на основе данных из MedicalRecords.getHistory().
-4.	После выбора стандарта врач нажимает на кнопку «данные», после чего его перекидывает на страницу с данными пациента для необходимой справки (HospitalController извлекает данные из MedicalRecords.getPatientVisits(patientId) и Visit.getVisitById(visitId)).
-5.	После заполнения и проверки данных, врач нажимает на кнопку «выдать справку» (UI.handleButtonClick() вызывает HospitalController.requestCertificate() с заполненными данными).
-6.	Приложение отправляет запрос с имеющимися данными на выдачу справки:
-- o	HospitalController обрабатывает запрос, начинает транзакцию (IDatabase.beginTransaction()).
-- o	Создается или обновляется запись в MedicalRecords (MedicalRecords.addVisit() или updateData()).
-- o	HospitalController.notifyObservers() уведомляет Patient и UI о выдаче (Patient.update(message), UI.update(message)).
-- o	Транзакция коммитится (IDatabase.commit()). Если ошибка, rollback (IDatabase.rollback()).
-7.	Затем справка появляется в карте пациента, где пациент может ее просмотреть (MedicalRecords.linkToPatient(), Patient.enterMedicalData() для просмотра через личный кабинет).
-Выдача направлений:
-1.	В UI приема врач заносит данные, полученные от пациента (аналогично шагу 1 выдачи справок: HospitalController.updateMedicalData()).
-2.	Затем врач нажимает на кнопку «выдача направлений» (UI.handleButtonClick() вызывает HospitalController.generateReferral()).
-3.	В открытом окне появится поле для ввода специализации врача (UI отображает опции на основе Doctor.specialization из базы данных через Schedule.selectDoctor()).
-4.	После выбора специальности появится окно для уточнения причины выдачи (UI.handleButtonClick() обновляет Visit.addDiagnosis() или Visit.symptoms).
-5.	Затем врач должен нажать на кнопку «выдать направление» (UI.handleButtonClick() вызывает HospitalController.generateReferral() с данными).
-6.	Приложение отправляет запрос с имеющимися данными на выдачу направления:
-- o	HospitalController проверяет доступность врача (Schedule.checkAvailability(), Schedule.getFreeSlots()).
-- o	Создается новая запись в Visit (Visit.completeVisit() с visitType = "referral").
-- o	HospitalController.notifyObservers() уведомляет Patient, Doctor и UI (Doctor.update(message) для обновления расписания, Patient.update(message)).
-- o	Данные сохраняются в MedicalRecords.addVisit(visit) и IDatabase.executeQuery().
-7.	Направление появляется в медкарте пациента (MedicalRecords.getHistory(), доступно через Patient.showHistory() или HospitalController.showHistory()).
-Постусловия:
-- В медкарте пациента доступна выписанная справка для просмотра и скачивания (MedicalRecords.getHistory(), Patient.update(message: "Справка выдана")).
-- В медкарте пациента доступно направление к врачу нужной специальности (Schedule.confirmAppointment(), Doctor.updateSchedule()).
-- Пациент имеет доступ к личному кабинету (HospitalController.authenticateUser() для Patient).
-- Больница имеет хотя бы одного врача нужной специальности (проверено через Schedule.selectDoctor()).
-- Все изменения сохранены в базе данных (IDatabase.commit()), и наблюдатели уведомлены (IObservable.notifyObservers()).
-- Если произошла ошибка (например, отсутствие свободных слотов), транзакция откатывается (IDatabase.rollback()), и UI.update() отображает сообщение об ошибке.
-Альтернативные сценарии:
-- Если данные пациента некорректны: HospitalController.validateDoctorCredentials() или проверка в MedicalRecords возвращает ошибку, UI.update("Ошибка в данных").
-- Если врач не авторизован: Перенаправление на ExternalAuthentication.authorizeViaGosuslugi() или аналог.
-- Отмена операции: UI.handleButtonClick("cancel") вызывает HospitalController.notifyObservers("Операция отменена"), без изменений в базе.
+Use Case: Выдача справок и направлений врачом
 
+Основной сценарий:
+Выдача справок:
+1. Врач открывает UI приема в приложении.
+2. UI отображает экран приема с данными пациента (UI.displayPersonalAccount()).
+3. Врач заносит данные, полученные от пациента (UI.handleButtonClick() вызывает HospitalController.updateMedicalData()).
+4. Врач нажимает кнопку "Выдать справку" (UI.handleButtonClick() вызывает HospitalController.requestCertificate()).
+5. UI показывает поле для выбора стандарта справки (например, 086/у, 082/у) на основе данных из MedicalRecords.getHistory().
+6. После выбора стандарта врач нажимает "Данные" для просмотра информации пациента (HospitalController извлекает данные через MedicalRecords.getPatientVisits(patientId) и MedicalRecords.getVisitById(visitId)).
+7. Врач заполняет и проверяет данные, затем нажимает "Выдать справку" (UI.handleButtonClick() вызывает HospitalController.requestCertificate() с заполненными данными).
+8. Система обрабатывает запрос на выдачу справки.
+9. Система подтверждает выдачу и обновляет медицинскую карту.
+10. Пациент получает уведомление о выдаче справки.
+11. Справка появляется в медицинской карте пациента для просмотра.
+
+Выдача направлений:
+1. Врач открывает UI приема в приложении (аналогично шагу 1 выдачи справок).
+2. Врач заносит данные, полученные от пациента (UI.handleButtonClick() вызывает HospitalController.updateMedicalData()).
+3. Врач нажимает кнопку "Выдать направление" (UI.handleButtonClick() вызывает HospitalController.generateReferral()).
+4. UI показывает поле для ввода специализации врача (на основе Doctor.specialization через Schedule.selectDoctor()).
+5. После выбора специализации UI запрашивает причину выдачи (обновление Visit.symptoms или Visit.addDiagnosis()).
+6. Врач нажимает "Выдать направление" (UI.handleButtonClick() вызывает HospitalController.generateReferral() с данными).
+7. Система проверяет доступность врача и создает запись.
+8. Система подтверждает выдачу и обновляет расписание.
+9. Пациент и врач получают уведомления о направлении.
+10. Направление появляется в медицинской карте пациента для просмотра.
+
+Альтернативные сценарии:
+Альтернатива A1: Данные пациента некорректны
+1. На шаге 7 (справки) или шаге 6 (направления) система обнаруживает ошибку в данных (HospitalController вызывает проверку в MedicalRecords).
+2. UI показывает сообщение об ошибке (UI.update("Ошибка в данных")).
+3. Процесс возвращается к шагу 3 для корректировки данных.
+
+Альтернатива A2: Врач не авторизован
+1. На шаге 1 система проверяет авторизацию (HospitalController.authenticateUser()).
+2. Если авторизация не прошла, UI перенаправляет на экран входа (UI.displayLoginScreen()).
+3. Врач проходит аутентификацию через IExternalAuthentication (например, authorizeViaGosuslugi()).
+4. При успешной аутентификации процесс продолжается с шага 2.
+
+Альтернатива A3: Отмена операции
+1. На любом шаге врач нажимает "Отмена" (UI.handleButtonClick("cancel")).
+2. Система уведомляет об отмене (HospitalController.notifyObservers("Операция отменена")).
+3. Нет изменений в базе данных, процесс завершается.
+
+Альтернатива A4: Отсутствие свободных слотов для направления
+1. На шаге 7 (направления) система проверяет Schedule.checkAvailability() и обнаруживает отсутствие слотов.
+2. UI показывает сообщение об ошибке (UI.update("Нет свободных слотов")).
+3. Транзакция откатывается (IDatabase.rollback()).
+4. Процесс возвращается к шагу 4 для выбора другой специализации.
+
+Поток данных и особенности реализации (согласно диаграмме):
+1. Аутентификация врача: UI --> HospitalController.authenticateUser() --> IExternalAuthentication (Gosuslugi/Max/VKId) --> IDatabase для проверки учетных данных.
+2. Обновление данных: UI.handleButtonClick() --> HospitalController.updateMedicalData() --> MedicalRecords.updateData() --> IMedicalRecordRepository.save() (реализованный MedicalRecordRepository) --> IDatabase.executeQuery().
+3. Выдача справки: HospitalController.requestCertificate() --> MedicalRecords.createRecord() или addVisit() --> Visit.completeVisit() с обновлением diagnosis, symptoms и т.д. HospitalController управляет транзакцией: IDatabase.beginTransaction() --> commit() или rollback().
+4. Выдача направления: HospitalController.generateReferral() --> Schedule.checkAvailability() и getFreeSlots() --> Doctor.updateSchedule() --> MedicalRecords.addVisit(visit) с visitType = "referral". Данные сохраняются через IDatabase.
+5. Уведомления: HospitalController (как IObservable) вызывает notifyObservers(message) для обновления Patient.update(message), Doctor.update(message) и UI.update(message).
+6. Просмотр данных: Patient или Doctor через HospitalController.showHistory() --> MedicalRecords.getHistory() или getPatientVisits() --> IMedicalRecordRepository.findByPatientId() --> IDatabase.
+7. База данных: Все операции используют IDatabase (PostgreSQLDatabase или SQLiteDatabase) для connect(), executeQuery(), commit()/rollback().
+
+Постусловия:
+- В медицинской карте пациента (MedicalRecords) добавлена справка или направление (Visit с соответствующими данными: diagnosis, symptoms, treatment).
+- Данные сохранены в базе (IDatabase.commit()), с возможностью отката при ошибках (IDatabase.rollback()).
+- Пациент и врач уведомлены (IObservable.notifyObservers(), Patient.update(), Doctor.update()).
+- Доступ к карте через личный кабинет (HospitalController.authenticateUser() для Patient, UI.displayPersonalAccount()).
+- Расписание врача обновлено при направлении (Schedule.updateDoctorSchedule(), Doctor.updateSchedule()).
+- Если ошибка (например, некорректные данные или отсутствие слотов), изменения не сохраняются, и UI отображает сообщение (UI.update()).
