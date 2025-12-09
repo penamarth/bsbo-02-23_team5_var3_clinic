@@ -1,115 +1,66 @@
 @startuml
-title Проведение приема пациента врачом
-
-actor "Врач" as Doctor
+actor Врач
 participant "UI" as UI
 participant "HospitalController" as HC
-participant "ScheduleSystem" as Schedule
+participant "Schedule" as S
+participant "AppointmentRepository" as AR
+participant "Appointment" as A
 participant "MedicalRecords" as MR
-participant "Visit" as Visit
+participant "PatientRepository" as PR
+participant "Patient" as P
+participant "Visit" as V
+participant "MedicalRecord" as MRec
+participant "IMedicalRecordRepository" as IMR
 
-|||
-activate Doctor
-Doctor -> UI: 1. Открывает раздел расписания
-activate UI
-UI -> HC: getTodaySchedule()
-activate HC
-HC -> Schedule: getTodaysAppointments()
-activate Schedule
-Schedule --> HC: Список пациентов на сегодня
-deactivate Schedule
-HC --> UI: Данные расписания
-deactivate HC
-UI --> Doctor: 2. Показывает список пациентов
+Врач -> UI: Открывает раздел расписания
+UI -> HC: getTodaySchedule(doctorId)
+HC -> S: getDoctorAppointments(doctorId)
+S -> AR: findByDoctorId(doctorId)
+AR --> S: List<Appointment>
+S --> HC: List<Appointment>
+HC --> UI: List<Appointment>
+UI -> Врач: Отображает список приемов
 
-Doctor -> UI: 3. Выбирает первого пациента
-UI -> HC: startAppointment(patientId)
-activate HC
-HC -> Schedule: getAppointmentDetails(patientId)
-activate Schedule
-Schedule --> HC: Информация о приеме
-deactivate Schedule
+Врач -> UI: Выбирает пациента
+UI -> HC: startAppointment(appointmentId)
+HC -> S: getAppointmentById(appointmentId)
+S -> AR: findById(appointmentId)
+AR --> S: Appointment
+S --> HC: Appointment
+HC -> MR: getPatient(patientId)
+MR -> PR: findById(patientId)
+PR --> MR: Patient
+MR --> HC: Patient
+HC -> A: start()
+A --> V: createFromAppointment(appointment)
+V --> HC: Visit
+HC --> UI: Карточка приема с данными пациента
 
-HC -> MR: getPatientMedicalHistory(patientId)
-activate MR
-MR --> HC: Медицинская история пациента
-deactivate MR
+Врач -> UI: Вносит жалобы и показатели
+UI -> HC: updateSymptoms(symptoms)
+HC -> V: updateSymptoms(symptoms)
 
-HC --> UI: 4. Карточка приема + история
-deactivate HC
-UI --> Doctor: Открывает карточку приема
+Врач -> UI: Нажимает "Добавить диагноз"
+UI -> Врач: Запрашивает диагноз
+Врач -> UI: Вписывает диагноз
+UI -> HC: addDiagnosis(diagnosis)
+HC -> V: addDiagnosis(diagnosis)
 
-Doctor -> UI: 5. Вносит жалобы и показатели
-UI -> HC: updateVisitData(complaints, metrics)
-activate HC
-HC -> Visit: setComplaints(complaints)
-activate Visit
-Visit -> Visit: setVitalSigns(metrics)
-Visit --> HC: Данные обновлены
-deactivate Visit
-HC --> UI: Автосохранение выполнено
-deactivate HC
-UI --> Doctor: Данные сохранены
+Врач -> UI: Добавляет назначения
+UI -> HC: addPrescription(prescription)
+HC -> V: addPrescription(prescription)
 
-Doctor -> UI: 6. Нажимает «Добавить диагноз»
-UI -> HC: openDiagnosisSelection()
-activate HC
-HC --> UI: Данные справочника
-deactivate HC
-UI --> Doctor: 7. Открывает окно со справочником
-
-Doctor -> UI: 8. Выбирает диагноз из справочника
-UI -> HC: addDiagnosis(diagnosisData)
-activate HC
-HC -> Visit: setDiagnosis(diagnosisData)
-activate Visit
-Visit --> HC: Диагноз добавлен
-deactivate Visit
-HC --> UI: Диагноз сохранен в карточке
-deactivate HC
-UI --> Doctor: Диагноз добавлен в карточку
-
-Doctor -> UI: 9. Добавляет назначения и рекомендации
-UI -> HC: updateTreatmentPlan(treatmentData)
-activate HC
-HC -> Visit: setTreatmentPlan(treatmentData)
-activate Visit
-Visit --> HC: План лечения обновлен
-deactivate Visit
-HC --> UI: Назначения сохранены
-deactivate HC
-UI --> Doctor: Рекомендации добавлены
-
-Doctor -> UI: 10. Нажимает «Завершить прием»
-UI -> HC: completeAppointment()
-activate HC
-
-HC -> Visit: validateRequiredFields()
-activate Visit
-Visit --> HC: 11. Проверка обязательных полей\n(диагноз, назначения)
-deactivate Visit
-
-alt Все поля заполнены
-  HC -> Visit: markAsCompleted()
-  activate Visit
-  Visit --> HC: Прием завершен
-  deactivate Visit
-  
-  HC -> MR: updateMedicalRecord(visitData)
-  activate MR
-  MR --> HC: Медицинская карта обновлена
-  deactivate MR
-  
-  HC -> Schedule: markTimeSlotAsBusy()
-  activate Schedule
-  Schedule --> HC: Время занято
-  deactivate Schedule
-  HC --> UI: Прием успешно завершен
-  deactivate HC
-  UI --> Doctor: 15. Прием завершен
-  
-
-deactivate UI
-deactivate Doctor
+Врач -> UI: Нажимает "Завершить прием"
+UI -> HC: completeAppointment(appointmentId)
+HC -> V: saveVisit()
+V --> HC: boolean
+HC -> A: complete()
+A --> HC: Visit
+HC -> MR: addVisit(visit, patientId)
+MR -> IMR: save(record)
+IMR --> MR: boolean
+MR -> P: enterMedicalData(data)
+P --> MR: boolean
+MR --> HC: boolean
+HC -> P: update(message)
 @enduml
-
