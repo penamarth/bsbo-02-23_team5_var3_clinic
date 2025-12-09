@@ -1,5 +1,4 @@
 @startuml
-
 package "ExternalAuthentication <<Aggregate>>" {
     class ExternalAuthentication {
         +authorizeViaGosuslugi()
@@ -7,33 +6,28 @@ package "ExternalAuthentication <<Aggregate>>" {
         +authorizeViaVKID()
         +getUserData()
     }
-    
     interface Gosuslugi {
         -id: String
         -fullName: String
         +registrate()
         +getUserData()
     }
-    
     interface Max {
         -id: String
         -fullName: String
         +registrate()
         +getUserData()
     }
-    
     interface VKId {
         -id: String
         -fullName: String
         +registrate()
         +getUserData()
     }
-    
     ExternalAuthentication --> Gosuslugi
     ExternalAuthentication --> Max
     ExternalAuthentication --> VKId
 }
-
 package "Doctor <<Aggregate>>" {
     class Doctor {
         -id: String
@@ -46,7 +40,6 @@ package "Doctor <<Aggregate>>" {
         +update(message: String)
         +getSchedule(startDate: Date, endDate: Date): List<Appointment>
     }
-    
     interface IDoctorRepository {
         +findById(id: String): Doctor
         +findAll(): List<Doctor>
@@ -56,7 +49,6 @@ package "Doctor <<Aggregate>>" {
         +delete(id: String): boolean
         +existsById(id: String): boolean
     }
-    
     class DoctorRepository implements IDoctorRepository {
         +findById(id: String): Doctor
         +findAll(): List<Doctor>
@@ -66,10 +58,8 @@ package "Doctor <<Aggregate>>" {
         +delete(id: String): boolean
         +existsById(id: String): boolean
     }
-    
     Doctor --> IDoctorRepository
 }
-
 package "MedicalRecords <<Aggregate>>" {
     class Patient {
         -id: String
@@ -82,7 +72,6 @@ package "MedicalRecords <<Aggregate>>" {
         +update(message: String)
         +getMedicalHistory(): List<Visit>
     }
-    
     interface IPatientRepository {
         +findById(id: String): Patient
         +findAll(): List<Patient>
@@ -92,7 +81,6 @@ package "MedicalRecords <<Aggregate>>" {
         +existsById(id: String): boolean
         +findByInsurancePolicy(policyNumber: String): Patient
     }
-   
     class PatientRepository implements IPatientRepository {
         +findById(id: String): Patient
         +findAll(): List<Patient>
@@ -102,7 +90,6 @@ package "MedicalRecords <<Aggregate>>" {
         +existsById(id: String): boolean
         +findByInsurancePolicy(policyNumber: String): Patient
     }
-    
     class MedicalRecords {
         -patientRepository: IPatientRepository
         -medicalRecordRepository: IMedicalRecordRepository
@@ -115,7 +102,6 @@ package "MedicalRecords <<Aggregate>>" {
         +getPatientVisits(patientId: int): List<Visit>
         +getVisitById(visitId: int): Visit
     }
-    
     interface IMedicalRecordRepository {
         +findByPatientId(patientId: String): MedicalRecord
         +findByDoctorId(doctorId: String): List<MedicalRecord>
@@ -124,7 +110,6 @@ package "MedicalRecords <<Aggregate>>" {
         +delete(recordId: String): boolean
         +findByDateRange(startDate: Date, endDate: Date): List<MedicalRecord>
     }
-    
     class MedicalRecord {
         -id: int
         -patientId: int
@@ -132,14 +117,12 @@ package "MedicalRecords <<Aggregate>>" {
         -createdAt: DateTime
         -lastchange: DateTime
     }
-    
     MedicalRecords --> Patient
     MedicalRecords --> IPatientRepository
     MedicalRecords --> IMedicalRecordRepository
     IMedicalRecordRepository --> MedicalRecord
     Patient --> IPatientRepository
 }
-
 package "Appointment <<Aggregate>>" {
     class Appointment {
         -id: String
@@ -158,7 +141,6 @@ package "Appointment <<Aggregate>>" {
         +getStatus(): AppointmentStatus
         +setStatus(status: AppointmentStatus): boolean
     }
-
     interface IAppointmentRepository {
         +findById(id: String): Appointment
         +findByPatientId(patientId: String): List<Appointment>
@@ -169,7 +151,6 @@ package "Appointment <<Aggregate>>" {
         +delete(id: String): boolean
         +existsById(id: String): boolean
     }
-    
     class AppointmentRepository implements IAppointmentRepository {
         +findById(id: String): Appointment
         +findByPatientId(patientId: String): List<Appointment>
@@ -181,10 +162,8 @@ package "Appointment <<Aggregate>>" {
         +delete(id: String): boolean
         +existsById(id: String): boolean
     }
-    
     Appointment --> IAppointmentRepository
 }
-
 package "Visit <<Aggregate>>" {
     class Visit {
         -id: String
@@ -206,7 +185,6 @@ package "Visit <<Aggregate>>" {
         +getPrescriptions(): List<String>
     }
 }
-
 package "Schedule <<Aggregate>>" {
     class Schedule {
         -doctorRepository: IDoctorRepository
@@ -223,17 +201,14 @@ package "Schedule <<Aggregate>>" {
         +getPatientAppointments(patientId: String): List<Appointment>
     }
 }
-
 interface IObserver {
     +update(message: String)
 }
-
 interface IObservable {
     +addObserver(observer: IObserver)
     +removeObserver(observer: IObserver)
     +notifyObservers(message: String)
 }
-
 class UI {
     +displayHomeScreen()
     +displayRegistrationScreen()
@@ -242,7 +217,6 @@ class UI {
     +handleButtonClick()
     +update(message: String)
 }
-
 class HospitalController {
     -observers: List<IObserver>
     +authenticateUser()
@@ -260,8 +234,6 @@ class HospitalController {
     +scheduleAppointment(doctorId: String, dateTime: DateTime): Appointment
     +cancelAppointment(appointmentId: String, reason: String): boolean
 }
-
-
 UI --> HospitalController
 
 HospitalController --> ExternalAuthentication
