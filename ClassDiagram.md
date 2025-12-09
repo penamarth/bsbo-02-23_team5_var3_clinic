@@ -252,7 +252,7 @@ MedicalRecords o-- Visit
 MedicalRecords --> Appointment
 
 Doctor --> Schedule
-Schedule o-- Appointment
+Schedule --> Appointment
 Doctor --> Appointment
 Appointment --> Visit
 
