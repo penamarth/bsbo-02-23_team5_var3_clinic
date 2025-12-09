@@ -125,6 +125,7 @@ class AppointmentRepository implements IAppointmentRepository
     +findById(id: String): Appointment
     +findByPatientId(patientId: String): List<Appointment>
     +findByDoctorId(doctorId: String): List<Appointment>
+    +findByDoctorIdPatientId(doctorId: int, patientId: int): List<Appointment>
     +findByStatus(status: AppointmentStatus): List<Appointment>
     +save(appointment: Appointment): boolean
     +update(appointment: Appointment): boolean
@@ -174,7 +175,7 @@ class Visit {
     +addPrescription(prescription: String): boolean
     +updateSymptoms(symptoms: String): boolean
     +updateTreatment(treatment: String): boolean
-    +completeVisit(): boolean /' Вызывает MedicalRecords'/
+    +saveVisit(): boolean /' Вызывает MedicalRecords'/
     +getDiagnosis(): String
     +getPrescriptions(): List<String>
 }
