@@ -1,4 +1,5 @@
 @startuml
+
 package "ExternalAuthentication <<Aggregate>>" {
     class ExternalAuthentication {
         +authorizeViaGosuslugi()
@@ -6,28 +7,33 @@ package "ExternalAuthentication <<Aggregate>>" {
         +authorizeViaVKID()
         +getUserData()
     }
+    
     interface Gosuslugi {
         -id: String
         -fullName: String
         +registrate()
         +getUserData()
     }
+    
     interface Max {
         -id: String
         -fullName: String
         +registrate()
         +getUserData()
     }
+    
     interface VKId {
         -id: String
         -fullName: String
         +registrate()
         +getUserData()
     }
+    
     ExternalAuthentication --> Gosuslugi
     ExternalAuthentication --> Max
     ExternalAuthentication --> VKId
 }
+
 package "Doctor <<Aggregate>>" {
     class Doctor {
         -id: String
