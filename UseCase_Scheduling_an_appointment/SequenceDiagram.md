@@ -8,6 +8,14 @@ participant "Doctor" as D
 activate Patient
 Patient -> UI: Входит в приложение и выбирает "Записаться"
 activate UI
+UI -> HC: getDoctorsAndSpecializations()
+activate HC
+HC -> D: getAllSpecialists()
+activate D
+D --> HC: Список докторов и специализаций
+deactivate D
+HC --> UI: Врачи и специализации
+deactivate HC
 UI --> Patient: Отображает экран выбора врача/специализации
 Patient -> UI: Выбирает специализацию/врача
 UI -> HC: scheduleAppointment(выбор)
@@ -21,6 +29,7 @@ activate S
 S --> HC: Записи пациента
 deactivate S
 HC --> UI: Данные слотов
+deactivate HC
 UI --> Patient: Отображает слоты
 Patient -> UI: Выбирает слот
 UI -> HC: confirmAppointment(слот)

@@ -39,6 +39,7 @@ package "Doctor <<Aggregate>>" {
         +updateSchedule()
         +update(message: String)
         +getSchedule(startDate: Date, endDate: Date): List<Appointment>
+        +getAllSpecialists(): List<Doctor>, List<String>
     }
     interface IDoctorRepository {
         +findById(id: String): Doctor
@@ -224,7 +225,7 @@ class HospitalController {
     +registrateUser()
     +createMedicalRecord()
     +updateMedicalData()
-    +scheduleAppointment(patientId: String, doctorId: String, dateTime: DateTime): Appointment
+    +confirmAppointment(patientId: String, doctorId: String, dateTime: DateTime): Appointment
     +requestCertificate()
     +generateReferral()
     +showHistory(patientId: String): List<Visit>
@@ -232,8 +233,9 @@ class HospitalController {
     +addObserver(observer: IObserver)
     +removeObserver(observer: IObserver)
     +notifyObservers(message: String)
-    +scheduleAppointment(doctorId: String, dateTime: DateTime): Appointment
+    +scheduleAppointment(doctorId: String, dateTime: DateTime): List<Appointment>
     +cancelAppointment(appointmentId: String, reason: String): boolean
+    +getDoctorsAndSpecializations(): List<Doctor>, List<String>
 }
 UI --> HospitalController
 
