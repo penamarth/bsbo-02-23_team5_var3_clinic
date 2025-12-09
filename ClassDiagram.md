@@ -111,11 +111,12 @@ package "MedicalRecords <<Aggregate>>" {
         +findByDateRange(startDate: Date, endDate: Date): List<MedicalRecord>
     }
     class MedicalRecord {
-        -id: int
-        -patientId: int
-        -data: List<Visit>
-        -createdAt: DateTime
-        -lastchange: DateTime
+        +findByPatientId(patientId: String): MedicalRecord
+        +findByDoctorId(doctorId: String): List<MedicalRecord>
+        +save(record: MedicalRecord): boolean
+        +update(record: MedicalRecord): boolean
+        +delete(recordId: String): boolean
+        +findByDateRange(startDate: Date, endDate: Date): List<MedicalRecord>
     }
     MedicalRecords --> Patient
     MedicalRecords --> IPatientRepository
