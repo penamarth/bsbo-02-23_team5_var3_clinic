@@ -2,6 +2,7 @@
     participant UI
     participant HospitalController
     participant ExternalAuthentication
+    participant Gosuslugi
     participant MedicalRecords
     participant MedicalRecord
     participant IMedicalRecordRepository
@@ -15,15 +16,18 @@
     Пациент->>UI: 5. Выбирает "Госуслуги"
     UI->>HospitalController: 6. Обрабатывает запрос на регистрацию
     HospitalController->>ExternalAuthentication: 7. Начинает регистрацию через сервис
-    ExternalAuthentication->>Пациент: 8. Переходит в сервис Госуслуг
-    Пациент->>ExternalAuthentication: 9. Проходит проверку в Госуслугах
+    ExternalAuthentication->>Gosuslugi: 8. Переходит в сервис Госуслуг
+    Gosuslugi->>Пациент: 8. Переходит в сервис Госуслуг
+    Пациент->>Gosuslugi: 9. Проходит проверку в Госуслугах
+    Gosuslugi->>ExternalAuthentication: Успех
     ExternalAuthentication->>HospitalController: 10. Получает данные пациента из Госуслуг
     HospitalController->>MedicalRecords: 11. Начинает процесс создания медицинской карты
     MedicalRecords->>MedicalRecord: 12. Создает медицинскую карту пациента
+    MedicalRecord->>IMedicalRecordRepository: Сохраняет данные карты в хранилище
     MedicalRecords->>Patient: 13. Создает профиль пациента
     Patient-->>MedicalRecords: 14. Профиль привязан к карте
-    MedicalRecords->>IMedicalRecordRepository: 15. Сохраняет данные карты в хранилище
     MedicalRecords->>IPatientRepository: 16. Сохраняет профиль пациента в хранилище
+    MedicalRecords->>HospitalController: Успех
     HospitalController->>UI: 17. Отправляет уведомление об успешной регистрации
     UI->>Пациент: 18. Получает уведомление о завершении регистрации
     UI->>Пациент: 19. Переводит в раздел "Профиль"
@@ -32,5 +36,6 @@
     UI->>HospitalController: 22. Обновляет медицинскую карту
     HospitalController->>MedicalRecords: 22. Обновляет медицинскую карту
     MedicalRecords->>MedicalRecord: 23. Сохраняет обновленные данные
-    MedicalRecords->>IMedicalRecordRepository: 24. Сохраняет карту в хранилище
+    MedicalRecord->>IMedicalRecordRepository: 24. Сохраняет карту в хранилище
+    MedicalRecords->>HospitalController: Успех
     HospitalController->>Пациент: 25. Процесс регистрации завершен
