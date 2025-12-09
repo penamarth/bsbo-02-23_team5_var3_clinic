@@ -44,6 +44,7 @@ package "Doctor <<Aggregate>>" {
     interface IDoctorRepository {
         +findById(id: String): Doctor
         +findAll(): List<Doctor>
+        +findAllSpecializations(): List<String>
         +findBySpecialization(specialization: String): List<Doctor>
         +save(doctor: Doctor): boolean
         +update(doctor: Doctor): boolean
@@ -152,6 +153,7 @@ package "Appointment <<Aggregate>>" {
         +update(appointment: Appointment): boolean
         +delete(id: String): boolean
         +existsById(id: String): boolean
+        +getFreeSlots(doctorId: String, date: Date): List<DateTime>
     }
     class AppointmentRepository implements IAppointmentRepository {
         +findById(id: String): Appointment
@@ -252,7 +254,7 @@ MedicalRecords o-- Visit
 MedicalRecords --> Appointment
 
 Doctor --> Schedule
-Schedule --> Appointment
+Schedule o-- Appointment
 Doctor --> Appointment
 Appointment --> Visit
 
