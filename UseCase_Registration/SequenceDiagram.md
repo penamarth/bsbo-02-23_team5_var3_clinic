@@ -1,4 +1,3 @@
-sequenceDiagram
     actor Пациент
     participant UI
     participant HospitalController
