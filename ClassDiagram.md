@@ -224,6 +224,7 @@ class UI {
 class HospitalController {
     -observers: List<IObserver>
     +authenticateUser() /'Вызывает - ExternalAuthentication '/
+    +registrateUser() /'Вызывает - ExternalAuthentication '/
     +createMedicalRecord() /'Вызывает - MedicalRecords '/
     +updateMedicalData()  /'Вызывает - MedicalRecords '/
     +scheduleAppointment(patientId: String, doctorId: String, dateTime: DateTime): Appointment /'Вызывает Schedule'/
