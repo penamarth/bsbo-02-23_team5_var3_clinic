@@ -54,16 +54,6 @@ end
 
 Врач -> UI: Выбрать "Выдать справку"
 UI -> HospitalController: requestCertificate()
-alt Не авторизован (A2)
-HospitalController -> ExternalAuthentication: Проверка статуса
-ExternalAuthentication --> HospitalController: Истекло
-HospitalController --> UI: Переключить на экран входа
-Врач -> UI: Ввести учетные данные
-UI -> HospitalController: authenticateUser()
-HospitalController -> ExternalAuthentication: authorize
-ExternalAuthentication --> HospitalController: OK
-else Авторизован
-end
 HospitalController -> MedicalRecords: Анализ истории для типов справок
 MedicalRecords -> MedRepo: findByPatientId и фильтр
 MedRepo --> MedicalRecords: Записи
@@ -73,13 +63,13 @@ HospitalController --> UI: Отобразить типы
 Врач -> UI: Выбрать тип и запросить детали
 UI -> HospitalController: Получить детали
 HospitalController -> MedicalRecords: getVisitById(visitId)
-MedicalRecords -> MedRepo: findById или аналогичный
+MedicalRecords -> MedRepo: findById(patientID)
 MedRepo --> MedicalRecords: Visit
 MedicalRecords --> HospitalController: Детали визита
 HospitalController --> UI: Отобразить детали
 
 Врач -> UI: Редактировать и подтвердить
-alt Отмена (A3)
+alt Отмена (A2)
 Врач -> UI: Отменить
 UI -> HospitalController: cancel (например, через notify)
 HospitalController -> HospitalController: notifyObservers("отменено")
@@ -87,8 +77,8 @@ HospitalController --> UI: Вернуться к основному виду
 else Продолжить
 UI -> HospitalController: Сгенерировать справку (часть requestCertificate)
 HospitalController -> MedicalRecords: addVisit(visit, patientId) // Предполагая справку как часть визита
-MedicalRecords -> Visit: addDiagnosis и т.д. для справки
-Visit -> Visit: updateTreatment или notes для справки
+MedicalRecords -> Visit: addDiagnosis
+Visit -> Visit: updateTreatment
 Visit -> MedicalRecords: saveVisit()
 MedicalRecords -> MedRepo: save(record)
 MedRepo --> MedicalRecords: boolean
@@ -118,10 +108,6 @@ UI -> HospitalController: updateMedicalData()
 
 Врач -> UI: Выбрать "Выдать направление"
 UI -> HospitalController: generateReferral()
-alt Не авторизован (A2)
-... аналогично ...
-else
-end
 HospitalController -> Schedule: showSchedule(doctorId)
 Schedule -> AppRepo: findByDoctorId(doctorId)
 AppRepo --> Schedule: List<Appointment>
@@ -149,7 +135,7 @@ Appointment --> Schedule: Appointment
 Schedule --> HospitalController: Appointment
 end
 
-HospitalController -> Doctor: updateSchedule() // Если нужно
+HospitalController -> Doctor: updateSchedule()
 Doctor -> Schedule: getDoctorAppointments(doctorId)
 Schedule --> Doctor: List<Appointment>
 Doctor --> HospitalController: Обновлено
